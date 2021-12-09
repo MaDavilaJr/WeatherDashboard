@@ -1,16 +1,51 @@
 var apikey = "cacdf46eb92ee7bf1ff1db4b11b2e729"
 var archive = JSON.parse(window.localStorage.getItem('archive')) || [];
 
+    // local storage city names => function to save
+function listLocalStorageCityNames() {
+    // let cityNames = JSON.parse(localStorage.getItem("cityList"))
+    if (archive === []) {
+        return
+    }
+    for (let i = 0; i < archive.length; i++) {
+        const city = archive[i];
+        var cityBtn = $("<button>").addClass('btn').text(city)
+        $("#archive").append(cityBtn)
+    }
+
+
+}
+
+
+
+
 $(document).ready(function() {
   $("#search-btn").on('click', function() {
       var citySearch = $('#city-input').val();
       $('#city-input').val('');
       SearchWeather(citySearch)
   }) 
+
+  function listItems(pastSearches) {
+      var li = $("<li>").addClass('list-group-item list-group-item-action').text(pastSearches)  
+      $('#archive').append(li);
+    }
+  
+  // added localstorage functionality
+//   function updateLocalStorage(cityName) {
+//     let cityListLocalStorage = JSON.parse(localStorage.getItem("cityList"))
+//     if(cityListLocalStorage === null) {
+//         localStorage.setItem("cityList", [JSON.stringify(cityName)])
+//     } else {
+//         cityListLocalStorage.unshift(cityName)
+//         localStorage.setItem("cityList", [JSON.stringify(cityListLocalStorage)])
+//     }
+//   }
   
 
   function SearchWeather(citySearch) {
       // added forecast 
+    //   updateLocalStorage(citySearch)
       $("#forecast").empty()
       $.ajax({
         method: 'GET',
@@ -24,6 +59,7 @@ $(document).ready(function() {
             if(archive.indexOf(citySearch) === -1) {
                 archive.push(citySearch);
                 window.localStorage.setItem("archive", JSON.stringify(archive))
+                listItems(citySearch)
             }
             $.ajax({
                 method: 'GET',
@@ -67,11 +103,19 @@ $(document).ready(function() {
                     // empty the forecast like we did for the todays weather div on line 32
                     // Do a for loop 5 times
                     for(i=1; i<data.daily.length - 2; i++){
-                        var card = $("<div>").addClass("card col-md-2 m-2")
+
+                        var img = $("<img>").attr("src", "https://openweathermap.org/img/w/" + data.daily[i].weather[0].icon+'.png').css('width', '4em')
+                        var card = $("<div>").addClass("card col-md-2 m-2 bg-dark text-white").css('padding', '20px 20px')
                         var humid = $("<div>").addClass("card-text").css('paddingTop', '20px').text('Humidity: ' + data.daily[i].humidity + " %")
                         var wind = $("<h6>").addClass("card-text").css('paddingTop', '20px').text('Wind Speed: ' + data.daily[i].wind_speed + " MPH")
                         let temp = $("<h6>").addClass("card-text").css('paddingTop', '20px').text('Temperature: ' + data.daily[i].temp.max + " F")
-                        card.append(humid, wind, temp);
+                        // added date to forecast
+                        let day = moment(data.daily[i].dt, 'X').format("dddd MM-DD")
+                        let date = $("<h5>").addClass("card-text").css('paddingTop', '20px').text("Date: " + (day))
+
+
+
+                        card.append(date,img, temp, wind, humid);
 
 
                         // console.log(data.daily[i].humidity)
@@ -86,7 +130,20 @@ $(document).ready(function() {
       })
   }
 
+    $('#archive').on('click', "li", function() {
+        console.log($(this).text())
+        SearchWeather($(this).text())
+    })
+
+  if (archive.length < 0) {
+      SearchWeather(archive[archive.length - 1]);
+  }
+
+  for (var i = 0; i < archive.length; i++) {
+      listItems(archive[i])
+  }
 })
+//listLocalStorageCityNames()
 
 // create element (temp/humi??)
 // 
